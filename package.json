@@ -10,8 +10,13 @@
   },
   "license": "BSD",
   "dependencies": {
-    "underscore": "1.8.2",
+    "underscore": "1.8.2"
+  },
+  "devDependencies": {
     "coffee-script": "1.9.1"
+  },
+  "scripts": {
+    "prepublish": "coffee -o lib -c src/*.coffee"
   },
   "engine": "node >= 0.12.0"
 }

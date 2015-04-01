@@ -143,9 +143,10 @@ SI1145_ADDR                 = 0x60
 class Adafruit_SI1145  
     
     address: 0x60
+    device: '/dev/i2c-1'
 
-    constructor: (@address) ->
-        @wire = new Wire(@address);
+    constructor: (@address, @device) ->
+        @wire = new Wire(@address, { device: @device });
 
     begin: -> 
         id = @_read SI1145_REG_PARTID
