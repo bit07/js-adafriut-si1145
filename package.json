@@ -1,0 +1,17 @@
+{
+  "name": "js-adafruit-si1145",
+  "version": "0.1.0",
+  "description": "Accessing Adafruit SI1145 with Raspberry Pi.",
+  "main": "main.js",
+  "author": "Beat Brunner",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bit07/js-adafriut-si1145"
+  },
+  "license": "BSD",
+  "dependencies": {
+    "underscore": "1.8.2",
+    "coffee-script": "1.9.1"
+  },
+  "engine": "node >= 0.12.0"
+}
