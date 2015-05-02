@@ -255,3 +255,5 @@ class Adafruit_SI1145
 
     _read: (cmd, length, callback) -> 
         @wire.readBytes cmd, length, callback
+
+module.exports = Adafruit_SI1145
