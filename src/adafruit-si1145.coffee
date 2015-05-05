@@ -144,86 +144,86 @@ class Adafruit_SI1145
     
     address: 0x60
     device: '/dev/i2c-1'
+    log_err: true
 
-    constructor: (@address, @device) ->
+    constructor: (@address, @device, @log_err) ->
         @wire = new Wire(@address, { device: @device });
 
     begin: -> 
-        id = @_read SI1145_REG_PARTID
-        if (id != 0x45) then return
+        @_read SI1145_REG_PARTID, 1, (err, res) -> 
+            if (id != 0x45) then console.log 'device not supported'
 
         reset()
 
         #   ********************************* 
         #  enable UVindex measurement coefficients!
-        @_send SI1145_REG_UCOEFF0, 0x29
-        @_send SI1145_REG_UCOEFF1, 0x89
-        @_send SI1145_REG_UCOEFF2, 0x02
-        @_send SI1145_REG_UCOEFF3, 0x00
+        @_send SI1145_REG_UCOEFF0, 0x29, @_err
+        @_send SI1145_REG_UCOEFF1, 0x89, @_err
+        @_send SI1145_REG_UCOEFF2, 0x02, @_err
+        @_send SI1145_REG_UCOEFF3, 0x00, @_err
 
         #  enable UV sensor
         @_sendParam SI1145_PARAM_CHLIST, SI1145_PARAM_CHLIST_ENUV |
         SI1145_PARAM_CHLIST_ENALSIR | SI1145_PARAM_CHLIST_ENALSVIS |
-        SI1145_PARAM_CHLIST_ENPS1
+        SI1145_PARAM_CHLIST_ENPS1, @_err
         #  enable interrupt on every sample
-        @_send SI1145_REG_INTCFG, SI1145_REG_INTCFG_INTOE  
-        @_send SI1145_REG_IRQEN, SI1145_REG_IRQEN_ALSEVERYSAMPLE  
+        @_send SI1145_REG_INTCFG, SI1145_REG_INTCFG_INTOE, @_err
+        @_send SI1145_REG_IRQEN, SI1145_REG_IRQEN_ALSEVERYSAMPLE, @_err 
 
         #   ***************************** Prox Sense 1  
 
         #  program LED current
-        @_send SI1145_REG_PSLED21, 0x03 #  20mA for LED 1 only
-        @_sendParam SI1145_PARAM_PS1ADCMUX, SI1145_PARAM_ADCMUX_LARGEIR
+        @_send SI1145_REG_PSLED21, 0x03, @_err #  20mA for LED 1 only
+        @_sendParam SI1145_PARAM_PS1ADCMUX, SI1145_PARAM_ADCMUX_LARGEIR, @_err
         #  prox sensor #1 uses LED #1
-        @_sendParam SI1145_PARAM_PSLED12SEL, SI1145_PARAM_PSLED12SEL_PS1LED1
+        @_sendParam SI1145_PARAM_PSLED12SEL, SI1145_PARAM_PSLED12SEL_PS1LED1, @_err
         #  fastest clocks, clock div 1
-        @_sendParam SI1145_PARAM_PSADCGAIN, 0
+        @_sendParam SI1145_PARAM_PSADCGAIN, 0, @_err
         #  take 511 clocks to measure
-        @_sendParam SI1145_PARAM_PSADCOUNTER, SI1145_PARAM_ADCCOUNTER_511CLK
+        @_sendParam SI1145_PARAM_PSADCOUNTER, SI1145_PARAM_ADCCOUNTER_511CLK, @_err
         #  in prox mode, high range
         @_sendParam SI1145_PARAM_PSADCMISC, SI1145_PARAM_PSADCMISC_RANGE|
-        SI1145_PARAM_PSADCMISC_PSMODE
+        SI1145_PARAM_PSADCMISC_PSMODE, @_err
 
-        @_sendParam SI1145_PARAM_ALSIRADCMUX, SI1145_PARAM_ADCMUX_SMALLIR  
+        @_sendParam SI1145_PARAM_ALSIRADCMUX, SI1145_PARAM_ADCMUX_SMALLIR, @_err
         #  fastest clocks, clock div 1
-        @_sendParam SI1145_PARAM_ALSIRADCGAIN, 0
+        @_sendParam SI1145_PARAM_ALSIRADCGAIN, 0, @_err
         #  take 511 clocks to measure
-        @_sendParam SI1145_PARAM_ALSIRADCOUNTER, SI1145_PARAM_ADCCOUNTER_511CLK
+        @_sendParam SI1145_PARAM_ALSIRADCOUNTER, SI1145_PARAM_ADCCOUNTER_511CLK, @_err
         #  in high range mode
-        @_sendParam SI1145_PARAM_ALSIRADCMISC, SI1145_PARAM_ALSIRADCMISC_RANGE
+        @_sendParam SI1145_PARAM_ALSIRADCMISC, SI1145_PARAM_ALSIRADCMISC_RANGE, @_err
 
 
 
         #  fastest clocks, clock div 1
-        @_sendParam SI1145_PARAM_ALSVISADCGAIN, 0
+        @_sendParam SI1145_PARAM_ALSVISADCGAIN, 0, @_err
         #  take 511 clocks to measure
-        @_sendParam SI1145_PARAM_ALSVISADCOUNTER, SI1145_PARAM_ADCCOUNTER_511CLK
+        @_sendParam SI1145_PARAM_ALSVISADCOUNTER, SI1145_PARAM_ADCCOUNTER_511CLK, @_err
         #  in high range mode (not normal signal)
-        @_sendParam SI1145_PARAM_ALSVISADCMISC, SI1145_PARAM_ALSVISADCMISC_VISRANGE
+        @_sendParam SI1145_PARAM_ALSVISADCMISC, SI1145_PARAM_ALSVISADCMISC_VISRANGE, @_err
 
 
         #   ********************** 
 
         #  measurement rate for auto
-        @_send SI1145_REG_MEASRATE0, 0xFF #  255 * 31.25uS = 8ms
+        @_send SI1145_REG_MEASRATE0, 0xFF, @_err #  255 * 31.25uS = 8ms
 
         #  auto run
-        @_send SI1145_REG_COMMAND, SI1145_PSALS_AUTO
+        @_send SI1145_REG_COMMAND, SI1145_PSALS_AUTO, @_err
     
     reset: ->
-        @_send SI1145_REG_MEASRATE0, 0
-        @_send SI1145_REG_MEASRATE1, 0
-        @_send SI1145_REG_IRQEN, 0
-        @_send SI1145_REG_IRQMODE1, 0
-        @_send SI1145_REG_IRQMODE2, 0
-        @_send SI1145_REG_INTCFG, 0
-        @_send SI1145_REG_IRQSTAT, 0xFF
+        @_send SI1145_REG_MEASRATE0, 0, @_err
+        @_send SI1145_REG_MEASRATE1, 0, @_err
+        @_send SI1145_REG_IRQEN, 0, @_err
+        @_send SI1145_REG_IRQMODE1, 0, @_err
+        @_send SI1145_REG_IRQMODE2, 0, @_err
+        @_send SI1145_REG_INTCFG, 0, @_err
+        @_send SI1145_REG_IRQSTAT, 0xFF, @_err
 
-        @_send SI1145_REG_COMMAND, SI1145_RESET
-        delay 10
-        @_send SI1145_REG_HWKEY, 0x17
+        @_send SI1145_REG_COMMAND, SI1145_RESET, @_err
+        _.delay @_send SI1145_REG_HWKEY, 10, 0x17
 
-        delay 10        
+        _.delay _.noop, 10        
 
     # returns the UV index * 100 (divide by 100 to get the index)
     readUV: (callback) ->
@@ -255,5 +255,9 @@ class Adafruit_SI1145
 
     _read: (cmd, length, callback) -> 
         @wire.readBytes cmd, length, callback
+
+    _err: (msg) ->
+        if (@log_err) then console.log msg
+
 
 module.exports = Adafruit_SI1145
